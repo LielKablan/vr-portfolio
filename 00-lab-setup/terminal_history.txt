@@ -1,0 +1,116 @@
+    1  sudo apt update
+    2  sudo apt install virtualbox-guest-utils virtualbox-guest-x11
+    3  sudo reboot
+    4  VBoxControl --version
+    5  pgrep - a VBoxControl
+    6  pgrep -a VBoxControl
+    7  VBoxControl --clipboard
+    8  sudo cp /run/media/liel_01/3A7B-8B6E/myca.crt /usr/local/share/ca-certificates
+    9  sudo update-ca-certificates
+   10  sudo apt update
+   11  sudo cp /run/media/liel_01/3A7B-8B6E/myca.crt /home/liel_01/Documents
+   12  cp /run/media/liel_01/3A7B-8B6E/myca.crt /home/liel_01/Documents
+   13  cd ..
+   14  pwd
+   15  cd /run/media/liel_01/3A7B-8B6E
+   16  sudo cat
+   17  ls
+   18  sudo cat liel.txt
+   19  touch liel.txt
+   20  sudo cat liel.txt
+   21  sudo cat > liel.txt
+   22  sudo cat liel.txt
+   23  sudo apt update
+   24  sudo apt install -y build-essential gdb git python3 python3-pip python3-venv [B
+   25  [200~sudo apt install -y build-essential gdb git python3 python3-pip python3-venv docker.io docker-compose-plugin
+   26  sudo apt install -y build-essential gdb git python3 python3-pip python3-venv docker.io docker-compose-plugin
+   27  sudo apt install -y docker.io docker-compose-plugin
+   28  sudo apt update
+   29  sudo apt install -y docker.io docker-compose-plugin
+   30  sudo apt install -y docker.io docker-compose
+   31  git clone https://github.com/pwndbg/pwndbg
+   32  cd pwndbg && ./setup.sh && cd ..
+   33  python3 -m venv ~/vr-venv
+   34  source ~/vr-venv/bin/activate
+   35  pip install pwntools
+   36  sudo apt install -y cmake python3-dev
+   37  pip install pwntools
+   38  sudo apt install -y pkg-config
+   39  pip install "git+https://github.com/unicorn-engine/unicorn@e76b2db434382f59661471faae02b022a3ee5a30#subdirectory=bindings/python/"
+   40  sudo apt install -y python3-unicorn
+   41  cp -r /usr/lib/python3/dist-packages/unicorn* ~/vr-venv/lib/python3.14/site-packages
+   42  pip install --no-deps pwntools
+   43  pip install mako paramiko pyelftools capstone ropper
+   44  deactivate
+   45  rm -rf ~/vr-venv
+   46  sudo apt update
+   47  sudo apt install -y python3-pwntools
+   48  python3 -c "from pwn import *; print('pwntools OK')"
+   49  mkdir -p ~/vr-portfolio && cd ~/vr-portfolio
+   50  git init
+   51  mkdir -p 00-lab-setup 01-foundations 02-reverse-engineering          03-binexp-control-flow/ret2win 04-binexp-defeating-mitigations/ret2libc          05-ctf 06-web 07-cve-analysis 08-methodology
+   52  echo -e "# Vulnerability Research Portfolio\n\nמעבדת מחקר אישית ואוסף writeups של ליאל." > README.md
+   53  echo -e "*.core\ncore\n*.o\nflag*.txt\n" > .gitignore
+   54  git add .
+   55  git commit -m "chore: initialize vr-portfolio structure"
+   56  [200~git config --global user.email "you@example.com"
+   57  [200~git config --global user.email "lielikablan@gmail.com"
+   58  git config --global user.email "lielikablan@gmail.com"
+   59  git config --global user.name "Liel Kablan"
+   60  git branch -M main
+   61  git commit -m "chore: initialize vr-portfolio structure"
+   62  git remote add origin https://github.com/LielKablan/vr-portfolio.git
+   63  git push -u origin main
+   64  cat << 'EOF' > 00-lab-setup/setup.md
+   65  # Lab Setup Documentation
+   66  * OS: Ubuntu 26.04 LTS (VirtualBox)
+   67  * Tools Installed: gcc, git, python3, gdb + pwndbg, pwntools, Ghidra, Docker
+   68  * Platforms: picoCTF, pwn.college, PortSwigger
+   69  EOF
+   70  git add 00-lab-setup/setup.md
+   71  git commit -m "docs: add lab setup documentation"
+   72  git push
+   73  history > 00-lab-setup/terminal_history.txt
+   74  git add 00-lab-setup/terminal_history.txt
+   75  git commit -m "chore: add terminal history as proof of setup"
+   76  git push
+   77  gcc --version
+   78  echo 'int main(){return 0;}' > t.c && gcc t.c -o t && ./t && echo BUILD_OK
+   79  python3 -c "from pwn import *; print('pwntools OK')"
+   80  docker run --rm hello-world
+   81  gdb
+   82  gdb --version
+   83  pwndbg --version
+   84  cd ..
+   85  pwndbg --version
+   86  cd vr-portfolio/
+   87  git --version
+   88  docker --version
+   89  python --version
+   90  python3 --version
+   91  pwntools --version
+   92  ghidra
+   93  sudo apt update
+   94  sudo snap install ghidra
+   95  python3 -c "from pwn import *; print('pwntools OK')"
+   96  sudo usermod -aG docker $USER
+   97  cd..
+   98  cd ..
+   99  sudo reebot
+  100  sudo reboot
+  101  gnome-session-quit
+  102  docker run --rm hello-world
+  103  python3 -c "from pwn import *; print(pwn.version)"
+  104  python3 -c "from pwn; print(pwn.version)"
+  105  python3 -c "import pwn; print(pwn.version)"
+  106  ~/bash_history
+  107  cat ~/bash_history
+  108  cd ..
+  109  cat ~/bash_history
+  110  echo $SHEL
+  111  echo $SHELL
+  112  history -w
+  113  ~/bash_history
+  114  cat ~/bash_history
+  115  cat ~/.bash_history
+  116  history > 00-lab-setup/terminal_history.txt
