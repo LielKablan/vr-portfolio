@@ -2,4 +2,7 @@
 core
 *.o
 flag*.txt
-
+.gdb_history
+01-foundations/.gdb_history
+01-foundations/mem
+01-foundations/buffers
