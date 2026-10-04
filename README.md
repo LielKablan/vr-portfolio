@@ -7,7 +7,7 @@ This repository contains a structured vulnerability research environment alongsi
 The repository is organized into progressive research stages:
 
 - [x] **00-lab-setup:** Reproducible isolated research environment.
-- [ ] **01-foundations:** Memory layout analysis, C internals, and x86-64 assembly.
+- [x] **01-foundations:** Memory layout analysis, C internals, and x86-64 assembly.
 - [ ] **02-reverse-engineering:** Static and dynamic analysis of stripped binaries.
 - [ ] **03-binexp-control-flow:** Buffer overflows and control flow hijacking mechanisms.
 - [ ] **04-binexp-defeating-mitigations:** Bypassing NX and ASLR (Ret2libc).
