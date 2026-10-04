@@ -1,7 +1,9 @@
 ### 1: Stack Frame of greet
 
 The local buffer `name` starts at: `0x7fffffffdc80`
+
 The saved RBP is stored at: `0x7fffffffdca0`
+
 The return address is stored at: `0x7fffffffdca8`
 
 **According to the Assembly:**
