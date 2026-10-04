@@ -1,0 +1,7 @@
+[*] Compiling with 32-byte buffer...
+Evidence for 32 bytes:
+  401004:	48 83 ec 08          	sub    rsp,0x8
+
+[*] Compiling with 100-byte buffer...
+Evidence for 100 bytes:
+  401004:	48 83 ec 08          	sub    rsp,0x8
