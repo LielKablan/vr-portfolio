@@ -6,3 +6,11 @@ flag*.txt
 01-foundations/.gdb_history
 01-foundations/mem
 01-foundations/buffers
+
+# Ghidra project files
+*.gpr
+*.rep/
+
+# Compiled binaries
+02-reverse-engineering/crackme
+02-reverse-engineering/crackme_v2
