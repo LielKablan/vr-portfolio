@@ -1,29 +1,30 @@
+
 # Phase 3: Reverse Engineering
 
-This repository documents my work for Phase 3 of the Cyber Security Researcher track. It covers static and dynamic binary analysis, decompilation with Ghidra, debugging with GDB, and solutions for three CTF challenges focused on reversing and control flow manipulation.
+This repository documents my work for Phase 3 of the Cyber Security Researcher track. It covers static decompilation with Ghidra, dynamic debugging with GDB, System V ABI calling convention verification, and CTF challenge writeups.
 
 ---
 
 ## Lab Exercises: Reversing Stripped Binaries
 
-### Exercise 1: Finding `main` in a Stripped Binary (`crackme`)
+### Exercise 1: Finding `main` & Static Analysis (`crackme`)
 
-When analyzing closed-source binaries, debugging symbols are often stripped. I compiled a C program without debug symbols and stripped it to simulate this environment:
+When analyzing closed-source binaries, debugging symbols are stripped. I compiled a C reference program without debug symbols and stripped it to simulate a realistic target:
 
 ```bash
 gcc -O0 -no-pie -o crackme crackme.c
 strip crackme
 ```
 
-#### Analysis
-Running `file` confirms the binary is stripped, and `strings` reveals some readable literals (`"Password:"`, `"Correct. Flag: ..."`), but no function names.
+#### Static Analysis (Ghidra)
+Running `file crackme` confirms the binary is a stripped 64-bit ELF executable. Running `strings crackme` reveals literals like `"Password:"` and `"Correct. Flag: ..."`.
 
-To locate `main` in Ghidra:
-1. I navigated to the ELF entry point (`entry` at `0x004010d0`).
-2. According to the System V x86-64 calling convention, `entry` passes the address of `main` as the first argument (`RDI`) to `__libc_start_main`.
-3. In Ghidra, `RDI` points to `FUN_004011b6`, which is our actual `main` function.
+To locate `main` in Ghidra without symbol tables:
+1. Navigated to the ELF entry point (`entry` at `0x004010d0`).
+2. According to System V x86-64 calling conventions, `entry` passes the address of `main` as the first argument (`RDI`) to `__libc_start_main`.
+3. In Ghidra, `RDI` points to `FUN_004011b6`, which represents the actual `main` logic.
 
-Decompiled logic in Ghidra:
+Decompiled pseudocode in Ghidra:
 ```c
 builtin_strncpy(local_60, "entrypt", 8);
 printf("Password: ");
@@ -34,22 +35,60 @@ if (strcmp(local_60 + 8, local_60) == 0) {
 }
 ```
 
-#### Dynamic Verification (GDB)
-To verify the comparison at runtime:
-1. Set a breakpoint right before `strcmp`: `break *0x00401228`.
-2. Inspected the argument registers:
-   - `$rdi` (1st arg): User input string.
-   - `$rsi` (2nd arg): Expected string (`"entrypt"`).
+#### Dynamic Verification (`strcmp`)
+To verify string comparison at runtime:
+1. Set an instruction-specific breakpoint right before `strcmp`: `break *0x00401228`.
+2. Inspected the argument registers per System V ABI:
+   - `$rdi` (1st arg): User input buffer (`x/s $rdi` -> `"test"`).
+   - `$rsi` (2nd arg): Expected secret string (`x/s $rsi` -> `"entrypt"`).
 
 * **Flag:** `entrypoint{re_basics}`
 
 ---
 
-### Exercise 2: Reversing XOR Obfuscation (`crackme_v2`)
+### Exercise 2: Calling Convention Verification (`scanf`)
 
-In this exercise, string literals were obfuscated using an inline XOR loop with the mask `0x55`.
+To prove that a memory address represents the user input buffer at runtime (rather than relying solely on decompiler inference), I intercepted the `scanf` library call in GDB.
 
-#### Decompiled Loop (Ghidra)
+#### Execution & Register Inspection
+```text
+pwndbg> break __isoc23_scanf
+pwndbg> run
+```
+
+When hitting the breakpoint prior to user input:
+```text
+pwndbg> info registers rdi rsi
+rdi            0x402013            4202515
+rsi            0x7fffffffd5d8      140737488344536
+
+pwndbg> x/s $rdi
+0x402013: "%63s"
+
+pwndbg> p $rsi
+$1 = (void *) 0x7fffffffd5d8
+```
+
+#### System V x86-64 Mapping
+Under the System V ABI calling convention:
+* **`RDI` (1st Argument):** Holds the address of the format specifier string (`"%63s"`).
+* **`RSI` (2nd Argument):** Holds the memory address of the destination target buffer (`0x7fffffffd5d8`).
+
+**Takeaway:** Inspecting `$rsi` at the `scanf` call confirms the exact stack memory address designated to receive user input before any bytes are written.
+
+---
+
+### Exercise 3: Reversing XOR Obfuscation (`crackme_v2`)
+
+To test non-plaintext secrets, `crackme_v2` replaces `strcmp` with an inline XOR comparison loop using mask `0x55`.
+
+#### Build & Compilation
+```bash
+gcc -O0 -no-pie -o crackme_v2 crackme_v2.c
+strip crackme_v2
+```
+
+#### Static Decompilation (Ghidra)
 ```c
 for (i = 0; i < 6; i++) {
     if ((char)(input[i] ^ 0x55) != encrypted_bytes[i]) {
@@ -59,12 +98,26 @@ for (i = 0; i < 6; i++) {
 }
 ```
 
-Since XOR is symmetric (`Plaintext = Ciphertext ^ Mask`), I extracted the encrypted bytes `[0x26, 0x30, 0x36, 0x27, 0x30, 0x21]` from memory and decoded them using Python:
-
+Extracting the array `[0x26, 0x30, 0x36, 0x27, 0x30, 0x21]` and decoding via Python (`Plaintext = Ciphertext ^ 0x55`):
 ```python
 encrypted = [0x26, 0x30, 0x36, 0x27, 0x30, 0x21]
 password = "".join(chr(b ^ 0x55) for b in encrypted)
 print(f"Password: {password}")  # Output: secret
+```
+
+#### Dynamic Verification in GDB
+To verify the XOR evaluation dynamically:
+1. Set a breakpoint inside the comparison loop: `break *0x00401200`.
+2. Inspected loop registers during the first iteration (comparing input `'s'` / `0x73`):
+   - Input byte: `0x73`
+   - XOR result: `0x73 ^ 0x55 = 0x26`
+   - Encrypted byte in memory: `0x26` (Match confirmed).
+
+#### Verified Execution
+```bash
+$ ./crackme_v2
+Enter Password: secret
+Correct! Flag: entrypoint{xor_loop_master}
 ```
 
 * **Flag:** `entrypoint{xor_loop_master}`
@@ -75,26 +128,16 @@ print(f"Password: {password}")  # Output: secret
 
 ### 1. Vault Door Training
 
-* **Category:** Reverse Engineering / Source Code Analysis
+* **Category:** Reverse Engineering
 * **Source:** picoCTF / CyLab Academy
 
-#### Analysis
-The challenge provides Java source code (`VaultDoorTraining.java`):
-
+#### Analysis & Solution
+Inspecting `VaultDoorTraining.java`:
 ```java
-String userInput = scanner.next();
 String input = userInput.substring("academy{".length(), userInput.length() - 1);
-
-if (vaultDoor.checkPassword(input)) {
-    System.out.println("Access granted.");
-}
-
-public boolean checkPassword(String password) {
-    return password.equals("w4rm1ng_Up_w1tH_jAv4_1633b42d7f1");
-}
+if (vaultDoor.checkPassword(input)) { ... }
 ```
-
-The code strips the prefix (`academy{`, 8 characters) and trailing brace (`}`) from `userInput`, checking the middle string against the hardcoded value.
+The code strips the prefix (`academy{`) and suffix (`}`), checking the internal string against `w4rm1ng_Up_w1tH_jAv4_1633b42d7f1`.
 
 * **Flag:** `academy{w4rm1ng_Up_w1tH_jAv4_1633b42d7f1}`
 
@@ -102,31 +145,19 @@ The code strips the prefix (`academy{`, 8 characters) and trailing brace (`}`) f
 
 ### 2. Transformation
 
-* **Category:** Reverse Engineering / Bitwise Decoding
+* **Category:** Reverse Engineering / Bitwise Unpacking
 * **Source:** picoCTF / CyLab Academy
 
-#### Analysis
-We are given an encoded file (`enc`) containing Unicode characters. The challenge description shows how it was constructed:
-
+#### Analysis & Solution
+The challenge provides a 16-bit Unicode file generated via:
 ```python
 ''.join([chr((ord(flag[i]) << 8) + ord(flag[i + 1])) for i in range(0, len(flag), 2)])
 ```
 
-The encoding takes pairs of 8-bit ASCII characters and packs them into a single 16-bit Unicode character.
-
-#### Solution
-To reconstruct the flag, I wrote a Python script (`enc.py`) to unpack each 16-bit integer back into two 8-bit characters:
-- Upper 8 bits (1st char): `ord(char) >> 8`
-- Lower 8 bits (2nd char): `ord(char) & 0xFF`
-
+Reconstruct by unpacking upper 8 bits (`num >> 8`) and lower 8 bits (`num & 0xFF`):
 ```python
 encoded = open('enc').read()
-decoded = ""
-
-for char in encoded:
-    num = ord(char)
-    decoded += chr(num >> 8) + chr(num & 0xFF)
-
+decoded = "".join(chr(ord(c) >> 8) + chr(ord(c) & 0xFF) for c in encoded)
 print(decoded)
 ```
 
@@ -139,30 +170,13 @@ print(decoded)
 * **Category:** Reverse Engineering / Control Flow Hijacking
 * **Source:** picoCTF / CyLab Academy
 
-#### Analysis
-The challenge runs a custom Python interpreter that parses song lyrics. The secret flag is loaded into memory inside `secret_intro` at lines 0–4:
+#### Analysis & Solution
+The script evaluates lyrics line-by-line using a line pointer (`lip`). User input in `Crowd:` is stored directly into `song_lines[lip]` and split by `;`.
 
-```python
-secret_intro = "... " + flag + "\n"
-```
-
-However, execution starts at `[VERSE1]`, bypassing the flag lines. 
-
-Looking at the input handling code:
-```python
-elif re.match(r"CROWD.*", line):
-    crowd = input('Crowd: ')
-    song_lines[lip] = 'Crowd: ' + crowd
-```
-
-The user input is written directly into `song_lines[lip]`, which is later evaluated and split by semicolon (`;`).
-
-#### Solution
-When prompted with `Crowd:`, I injected a semicolon followed by a jump instruction:
+Injected Payload:
 ```text
 Crowd: ;RETURN 0
 ```
-
-The interpreter split the injected string, executed `RETURN 0`, updated the line pointer `lip = 0`, and jumped back to print lines 0–4 containing the flag.
+The interpreter evaluates `RETURN 0`, sets `lip = 0`, and jumps back to line 0 to print the hidden `secret_intro` containing the flag.
 
 * **Flag:** `academy{16_bits_inst34d_of_8_790ba37e}`
