@@ -1,7 +1,6 @@
-
 # Phase 3: Reverse Engineering
 
-This repository documents my work for Phase 3 of the Cyber Security Researcher track. It covers static decompilation with Ghidra, dynamic debugging with GDB, System V ABI calling convention verification, and CTF challenge writeups.
+This repository documents my work for Phase 3 of the Cyber Security Researcher track. It covers static decompilation with Ghidra, dynamic debugging with GDB, System V ABI calling convention verification, automated reproduction scripts, and CTF challenge writeups.
 
 ---
 
@@ -74,11 +73,9 @@ Under the System V ABI calling convention:
 * **`RDI` (1st Argument):** Holds the address of the format specifier string (`"%63s"`).
 * **`RSI` (2nd Argument):** Holds the memory address of the destination target buffer (`0x7fffffffd5d8`).
 
-**Takeaway:** Inspecting `$rsi` at the `scanf` call confirms the exact stack memory address designated to receive user input before any bytes are written.
-
 ---
 
-### Exercise 3: Reversing XOR Obfuscation (`crackme_v2`)
+### Exercise 3: Reversing XOR Obfuscation & Automated Test (`crackme_v2`)
 
 To test non-plaintext secrets, `crackme_v2` replaces `strcmp` with an inline XOR comparison loop using mask `0x55`.
 
@@ -105,19 +102,10 @@ password = "".join(chr(b ^ 0x55) for b in encrypted)
 print(f"Password: {password}")  # Output: secret
 ```
 
-#### Dynamic Verification in GDB
-To verify the XOR evaluation dynamically:
-1. Set a breakpoint inside the comparison loop: `break *0x00401200`.
-2. Inspected loop registers during the first iteration (comparing input `'s'` / `0x73`):
-   - Input byte: `0x73`
-   - XOR result: `0x73 ^ 0x55 = 0x26`
-   - Encrypted byte in memory: `0x26` (Match confirmed).
-
-#### Verified Execution
+#### Automated Reproduction Script (`test.sh`)
+An automated test script (`test.sh`) was added to verify both positive (`secret`) and negative (`wrongpass`) execution paths:
 ```bash
-$ ./crackme_v2
-Enter Password: secret
-Correct! Flag: entrypoint{xor_loop_master}
+./test.sh
 ```
 
 * **Flag:** `entrypoint{xor_loop_master}`
@@ -137,8 +125,9 @@ Inspecting `VaultDoorTraining.java`:
 String input = userInput.substring("academy{".length(), userInput.length() - 1);
 if (vaultDoor.checkPassword(input)) { ... }
 ```
-The code strips the prefix (`academy{`) and suffix (`}`), checking the internal string against `w4rm1ng_Up_w1tH_jAv4_1633b42d7f1`.
 
+* **Hypothesis / Assumption:** The hardcoded password in `checkPassword()` represents the inner flag content, and wrapping it in `academy{...}` satisfies the validation.
+* **Verification / Evidence:** Running `java VaultDoorTraining` with input `academy{w4rm1ng_Up_w1tH_jAv4_1633b42d7f1}` returned `Access granted.`, confirming that the hardcoded string was indeed the exact inner secret.
 * **Flag:** `academy{w4rm1ng_Up_w1tH_jAv4_1633b42d7f1}`
 
 ---
@@ -154,13 +143,8 @@ The challenge provides a 16-bit Unicode file generated via:
 ''.join([chr((ord(flag[i]) << 8) + ord(flag[i + 1])) for i in range(0, len(flag), 2)])
 ```
 
-Reconstruct by unpacking upper 8 bits (`num >> 8`) and lower 8 bits (`num & 0xFF`):
-```python
-encoded = open('enc').read()
-decoded = "".join(chr(ord(c) >> 8) + chr(ord(c) & 0xFF) for c in encoded)
-print(decoded)
-```
-
+* **Hypothesis / Assumption:** Reversing the packing bitwise (shifting right 8 bits for the upper byte and masking with `0xFF` for the lower byte) will reconstruct the original ASCII character pairs.
+* **Verification / Evidence:** Executing `solve.py` unpacked the Unicode characters into the printable ASCII string `academy{16_bits_inst34d_of_8_790ba37e}`, matching standard CTF flag format rules.
 * **Flag:** `academy{16_bits_inst34d_of_8_790ba37e}`
 
 ---
@@ -173,10 +157,6 @@ print(decoded)
 #### Analysis & Solution
 The script evaluates lyrics line-by-line using a line pointer (`lip`). User input in `Crowd:` is stored directly into `song_lines[lip]` and split by `;`.
 
-Injected Payload:
-```text
-Crowd: ;RETURN 0
-```
-The interpreter evaluates `RETURN 0`, sets `lip = 0`, and jumps back to line 0 to print the hidden `secret_intro` containing the flag.
-
+* **Hypothesis / Assumption:** Injecting `;RETURN 0` into the `Crowd:` prompt will cause `line.split(';')` to evaluate `RETURN 0` as a standalone command, updating `lip = 0` and jumping to the hidden `secret_intro`.
+* **Verification / Evidence:** Submitting `;RETURN 0` in the live session successfully altered `lip` to `0`, and the interpreter outputted lines 0–4 containing the `secret_intro` flag on the second refrain iteration.
 * **Flag:** `academy{16_bits_inst34d_of_8_790ba37e}`
