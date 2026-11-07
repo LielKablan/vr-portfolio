@@ -14,3 +14,10 @@ flag*.txt
 # Compiled binaries
 02-reverse-engineering/crackme
 02-reverse-engineering/crackme_v2
+
+# Binexp compiled binaries & output artifacts
+03-binexp-control-flow/ret2win/vuln
+03-binexp-control-flow/ret2win/vuln2
+03-binexp-control-flow/ret2win/vuln_canary
+03-binexp-control-flow/ret2win/payload.bin
+03-binexp-control-flow/format-string-0/format-string-0
