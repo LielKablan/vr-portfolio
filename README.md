@@ -9,7 +9,7 @@ The repository is organized into progressive research stages:
 - [x] **00-lab-setup:** Reproducible isolated research environment.
 - [x] **01-foundations:** Memory layout analysis, C internals, and x86-64 assembly.
 - [x] **02-reverse-engineering:** Static and dynamic analysis of stripped binaries.
-- [ ] **03-binexp-control-flow:** Buffer overflows and control flow hijacking mechanisms.
+- [x] **03-binexp-control-flow:** Buffer overflows and control flow hijacking mechanisms.
 - [ ] **04-binexp-defeating-mitigations:** Bypassing NX and ASLR (Ret2libc).
 - [ ] **05-ctf:** Vulnerability discovery and writeups for designated CTF challenges.
 - [ ] **06-web:** Web application vulnerability assessments and reports.
